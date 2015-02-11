@@ -1,0 +1,1 @@
+node ./node_modules/watchify/bin/cmd.js ./src/main.js -o ./dist/main.js -v
