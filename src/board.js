@@ -41,14 +41,12 @@ module.exports = function (d3) {
             var x = parseInt(_this.attr('x'), 10);
             var y = parseInt(_this.attr('y'), 10);
             var fill = "black";
-            var i = 0;
 
             //check if we should color the current pixel
             colors.forEach(function (color) {
                 var colorname = Object.keys(color)[0];
                 color[colorname].forEach(function (colorCoords) {
                     if(colorCoords.x === x && colorCoords.y === y) fill = colorname;
-                    i++;
                 });
             });
 
