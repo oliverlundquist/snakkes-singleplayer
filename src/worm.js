@@ -9,16 +9,29 @@ function Worm(board) {
     this.direction = 'right';
 }
 
-Worm.prototype.move = function () {
+Worm.prototype.move = function (apples) {
 
     //can move?
     var lastCoordinate = this.coords[this.coords.length-1];
     var nextCoordinate = this.nextCoordinate( lastCoordinate.x, lastCoordinate.y );
+    var self = this;
+
+    apples.forEach(function (apple) {
+        apple.getCoordinates().forEach(function (appleCoords) {
+            self.getCoordinates().forEach(function (wormCoords) {
+                if(appleCoords.x === wormCoords.x && appleCoords.y === wormCoords.y) {
+                    self.grow = true; //ate apple
+                    apple.wormAteMe();
+                }
+            });
+        });
+    });
 
     if (lastCoordinate.x !== nextCoordinate.x || lastCoordinate.y !== nextCoordinate.y)
     {
         this.coords.push(nextCoordinate);
-        this.coords.splice(0, 1);
+        if( ! this.grow) this.coords.splice(0, 1);
+        this.grow = false;
     }
 };
 

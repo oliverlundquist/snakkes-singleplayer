@@ -18711,6 +18711,65 @@ return jQuery;
 }));
 
 },{}],"/Users/oliver/Webroot/snakkes-singleplayer/src/apple.js":[function(require,module,exports){
+module.exports = function (board) {
+
+    function Apple(worms) {
+        this.color = 'white';
+        this.eaten = false;
+        this.coords = null;
+        this.worms = worms;
+        this.getNewCoordinates();
+    };
+
+    Apple.prototype.respawn = function () {
+        if(this.eaten) this.getNewCoordinates();
+        this.eaten = false;
+    };
+
+    Apple.prototype.wormAteMe = function () {
+        this.eaten = true;
+    };
+
+    Apple.prototype.xBounds = board.meta().ticksX;
+
+    Apple.prototype.yBounds = board.meta().ticksY;
+
+    Apple.prototype.getNewCoordinates = function (worms) {
+        this.coords = null;
+        while(this.coords === null) {
+            var found = true;
+            var tmpCoords = this.generateCoords();
+
+            this.worms.forEach(function (worm) {
+                worm.getCoordinates().forEach(function (wormCoords) {
+                    if(wormCoords.x === tmpCoords.x && wormCoords.y === tmpCoords.y) found = false;
+                });
+            });
+
+            if(found) { this.coords = [tmpCoords] }
+        }
+    };
+
+    Apple.prototype.generateCoords = function () {
+        return {
+            x: this.xBounds[Math.floor(Math.random() * (this.xBounds.length-1))],
+            y: this.yBounds[Math.floor(Math.random() * (this.yBounds.length-1))]
+        };
+    };
+
+    Apple.prototype.getCoordinates = function () {
+        return this.coords;
+    };
+
+    Apple.prototype.getCoordinatesWithColor = function () {
+        var obj = {};
+        obj[this.color] = this.getCoordinates();
+        return obj;
+    };
+
+    return Apple;
+
+};
 
 },{}],"/Users/oliver/Webroot/snakkes-singleplayer/src/board.js":[function(require,module,exports){
 module.exports = function (d3) {
@@ -18772,7 +18831,14 @@ module.exports = function (d3) {
     };
 
     function meta() {
-        return { x: pw, y: ph, boundsX: ticksX[ticksX.length-2], boundsY: ticksY[ticksY.length-2] };
+        return {
+            x: pw,
+            y: ph,
+            boundsX: ticksX[ticksX.length-2],
+            boundsY: ticksY[ticksY.length-2],
+            ticksX: ticksX,
+            ticksY: ticksY
+        };
     };
 
     return {
@@ -18848,25 +18914,34 @@ var game = require('./game')();
 var board = require('./board')(d3);
 var controller = require('./controller')($);
 var Worm = require('./worm');
-var apple = require('./apple');
+var Apple = require('./apple')(board);
 var gameEvents = [];
 var repaintEvents = [];
-var controllerEvents = [];
+var apples = [];
+var worms = [];
 
 //create worm instance
 var worm = new Worm(board);
+worms.push(worm);
+
+//create apple instance
+//TODO: this should be interfaced
+var apple = new Apple(worms);
+apples.push(apple);
 
 //register controller events for worms
-controller.register([worm]);
+controller.register(worms);
 
 //paint board
 board.paint();
 
 //repaint events
 repaintEvents.push({ instance: worm, method: 'getCoordinatesWithColor', attributes: null });
+repaintEvents.push({ instance: apple, method: 'getCoordinatesWithColor', attributes: null });
 
 //game events
-gameEvents.push({ instance: worm, method: 'move', attributes: null });
+gameEvents.push({ instance: apple, method: 'respawn', attributes: null });
+gameEvents.push({ instance: worm, method: 'move', attributes: apples });
 gameEvents.push({ instance: board, method: 'repaint', attributes: repaintEvents });
 
 //start game
@@ -18884,16 +18959,29 @@ function Worm(board) {
     this.direction = 'right';
 }
 
-Worm.prototype.move = function () {
+Worm.prototype.move = function (apples) {
 
     //can move?
     var lastCoordinate = this.coords[this.coords.length-1];
     var nextCoordinate = this.nextCoordinate( lastCoordinate.x, lastCoordinate.y );
+    var self = this;
+
+    apples.forEach(function (apple) {
+        apple.getCoordinates().forEach(function (appleCoords) {
+            self.getCoordinates().forEach(function (wormCoords) {
+                if(appleCoords.x === wormCoords.x && appleCoords.y === wormCoords.y) {
+                    self.grow = true; //ate apple
+                    apple.wormAteMe();
+                }
+            });
+        });
+    });
 
     if (lastCoordinate.x !== nextCoordinate.x || lastCoordinate.y !== nextCoordinate.y)
     {
         this.coords.push(nextCoordinate);
-        this.coords.splice(0, 1);
+        if( ! this.grow) this.coords.splice(0, 1);
+        this.grow = false;
     }
 };
 

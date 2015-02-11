@@ -57,7 +57,14 @@ module.exports = function (d3) {
     };
 
     function meta() {
-        return { x: pw, y: ph, boundsX: ticksX[ticksX.length-2], boundsY: ticksY[ticksY.length-2] };
+        return {
+            x: pw,
+            y: ph,
+            boundsX: ticksX[ticksX.length-2],
+            boundsY: ticksY[ticksY.length-2],
+            ticksX: ticksX,
+            ticksY: ticksY
+        };
     };
 
     return {
