@@ -2,6 +2,10 @@
   "name": "snakkes-singleplayer",
   "description": "Snakkes singleplayer mode",
   "version": "0.0.0",
+  "engines": {
+    "node": "0.11.14",
+    "npm": "2.2.0"
+  },
   "author": "Oliver Lundquist",
   "repository": "https://github.com/oliverlundquist/snakkes-singleplayer",
   "license": "MIT",
